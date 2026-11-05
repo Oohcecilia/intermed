@@ -10,20 +10,22 @@ fetch('testimonials.json')
         const slideClass = index === 0 ? 'carousel-item active' : 'carousel-item';
         const slideContent = `
             <div class="${slideClass}">
-                <div class="row">
-                    <div class="col-8">
-                        <p class="p-3 text-secondary fs-6"><i>"${item.message}"</i></p>
+                <figure class="t-figure">
+                    <div class="row g-0">
+                        <div class="col-12 col-sm-8">
+                            <p class="t-quote"><i>"${item.message}"</i></p>
+                        </div>
+                        <div class="col-12 col-sm-4 t-person">
+                            <img src="${item.picture}" class="t-avatar" alt="${item.name}" />
+                            <p class="t-name">${item.name}</p>
+                        </div>
                     </div>
-                    <div class="col-4 d-flex flex-column justify-content-center">
-                        <img src="${item.picture}" class="d-block w-100" alt="${item.name}" />
-                        <p class="text-center py-2">${item.name}</p>
-                    </div>
-                </div>
+                </figure>
             </div>`;
         carouselInner.innerHTML += slideContent;
         const btnClass = index === 0 ? 'active' : '';
         const btnContent = `<button type="button" data-bs-target="#carousel-testimonials" data-bs-slide-to="${index}"
-                        class="bg-dark ${btnClass}" ${index === 0 ? 'aria-current="true"':''} aria-label="Testimonial ${index+1}"></button>`;
+                        class="${btnClass}" ${index === 0 ? 'aria-current="true"':''} aria-label="Testimonial ${index+1}"></button>`;
         carouselIndicator.innerHTML += btnContent;
     });
 });
@@ -65,14 +67,13 @@ fetch(remote+'?action=courses')
         //<h6>${course.next || 'No schedule yet'}</h6>
         //</div>
         $('#courses-details').append(`
-            <div class="col mb-3">
-                <div class="card h-100 border-0 rounded-5 shadow py-3 blue-abstract-${rowPos}">
+            <div class="col mb-3" data-reveal="depth" data-reveal-delay="${(counter * 0.08).toFixed(2)}">
+                <div class="card course-card h-100 border-0 rounded-5 blue-abstract-${rowPos} tilt-sheen" data-tilt data-tilt-max="6">
                     <div class="card-header bg-transparent fs-3 border-0">${course.name}</div>
                     <div class="card-body text-secondary">${course.details}</div>
                     <div class="card-footer border-0 bg-transparent">
-
                         <div class="d-flex justify-content-end">
-                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#inquiry-modal" data-bs-course="${course.name}" type="button" class="join-inquire text-decoration-none text-shadow-light" style="--bs-link-color-rgb:40, 170, 187;">Join or Inquire <i class="bi bi-arrow-right"></i></a>
+                            <a href="javascript:void(0);" data-bs-toggle="modal" data-bs-target="#inquiry-modal" data-bs-course="${course.name}" class="join-inquire text-decoration-none">Join or Inquire <i class="bi bi-arrow-right"></i></a>
                         </div>
                     </div>
                 </div>
@@ -83,6 +84,7 @@ fetch(remote+'?action=courses')
     }
     $('#inquiry-for').append('<option value="Exam">Exams Inquiry</option>')
     $('#inquiry-for').append('<option value="Scholarship">Scholarship Details</option>')
+    if (window.motionRefresh) window.motionRefresh(document.getElementById('courses-details'))
 })
 fetch(remote+'?action=branches')
 .then(response => response.json())
@@ -112,7 +114,9 @@ fetch(remote+'?action=branches')
     $('#philippine-map').find('.pin-map').remove()
     for (const k in locations){
         const coords = locations[k]
-        $('#philippine-map').append(`<a href="javascript:void(0);" id="pin-map-${k}" data-email="${data[k]?.email || data['iloilo'].email}" data-location="${k}" class="pin-map text-nowrap" style="position:absolute;left:${coords.x}px;top:${coords.y}px"><i class="bi bi-geo-alt-fill fs-5"></i><small class="text-capitalize">${k == 'cdo' ? 'cagayan de oro' : k}</small>${['iloilo'].includes(k) ? '<small class="text-danger">*</small>':''}</a>`);
+        const pinLeft = (coords.x / 445 * 100).toFixed(2)
+        const pinTop = (coords.y / 573 * 100).toFixed(2)
+        $('#philippine-map').append(`<a href="javascript:void(0);" id="pin-map-${k}" data-email="${data[k]?.email || data['iloilo'].email}" data-location="${k}" class="pin-map text-nowrap" style="left:${pinLeft}%;top:${pinTop}%"><i class="bi bi-geo-alt-fill"></i><small class="text-capitalize">${k == 'cdo' ? 'cagayan de oro' : k}</small>${['iloilo'].includes(k) ? '<small class="text-danger">*</small>':''}</a>`);
     }
     $('#contact-location-details').html('')
     for (const k in data){
@@ -124,8 +128,8 @@ fetch(remote+'?action=branches')
         $('#contact-location-details').append(`
             <div id="location-details-${k}" class="location-details d-none">
                 <h3 class="subtitle text-capitalize">${k == 'cdo' ? 'cagayan de oro' : k}</h3>
-                <div class="d-flex justify-content-evenly">
-                    <div class="flex-fill">
+                <div class="location-details-grid">
+                    <div class="location-details-col">
                         ${address == '' ? '': `
                             <div class="d-flex align-items-center">
                                 <i class="bi bi-geo-alt-fill"></i>
@@ -140,7 +144,7 @@ fetch(remote+'?action=branches')
                             </p>
                         </div>
                     </div>
-                    <div class="flex-fill">
+                    <div class="location-details-col">
                         <div class="d-flex align-items-center">
                             <i class="bi bi-envelope-fill"></i>
                             <p class="m-0 px-2"><a href="mailto:${location.email}" target="_blank">${location.email}</a></p>
@@ -173,20 +177,21 @@ fetch('faqs.json')
     $('#faq-accordion').html('')
     data.forEach((item, index) => {
         $('#faq-accordion').append(`
-            <div class="accordion-item border-0 rounded-0">
-                <h2 class="accordion-header border-bottom">
-                    <button class="accordion-button collapsed shadow-none border-0 rounded-0 fs-5 fw-medium" style="--bs-accordion-btn-color:#163C76;" type="button" data-bs-toggle="collapse"
+            <div class="accordion-item" data-reveal="up" data-reveal-delay="${(index * 0.05).toFixed(2)}">
+                <h2 class="accordion-header">
+                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse"
                         data-bs-target="#collapse-${index}" aria-expanded="false" aria-controls="collapse-${index}">
                         ${item.question}
                     </button>
                 </h2>
                 <div id="collapse-${index}" class="accordion-collapse collapse" data-bs-parent="#faq-accordion">
-                    <div class="accordion-body text-secondary">
+                    <div class="accordion-body">
                         ${item.answer}
                     </div>
                 </div>
             </div>`)
     });
+    if (window.motionRefresh) window.motionRefresh(document.getElementById('faq-accordion'))
 });
 
 var date = new Date()
