@@ -185,10 +185,6 @@ p {
   background: var(--paper);
 }
 
-.section--sand {
-  background: var(--sand);
-}
-
 .section--dark {
   background: var(--navy-950);
   color: var(--white);
@@ -496,7 +492,8 @@ p {
 }
 
 .primary-nav a:hover::after,
-.primary-nav a[aria-current="page"]::after {
+.primary-nav a[aria-current="page"]::after,
+.primary-nav a[aria-current="location"]::after {
   transform: scaleX(1);
 }
 
@@ -715,7 +712,6 @@ p {
 }
 
 .about-copy.reveal,
-.scholarship-copy.reveal,
 .branch-explorer.reveal,
 .courses-note.reveal,
 .why-foot.reveal {
@@ -804,7 +800,6 @@ p {
 /* Curtain-style media reveals */
 
 .js .about-media.reveal figure::after,
-.js .scholarship-media.reveal::after,
 .js .news-feature.reveal .news-media::after,
 .js .careers-wrap.reveal .careers-media::after {
   content: "";
@@ -829,11 +824,6 @@ p {
   background: var(--white);
 }
 
-.js .scholarship-media.reveal::after {
-  border-radius: var(--radius-lg);
-  background: var(--sand);
-}
-
 .js .news-feature.reveal .news-media::after {
   background: var(--white);
 }
@@ -843,26 +833,19 @@ p {
 }
 
 .js .about-media.reveal.is-visible figure::after,
-.js .scholarship-media.reveal.is-visible::after,
 .js .news-feature.reveal.is-visible .news-media::after,
 .js .careers-wrap.reveal.is-visible .careers-media::after {
   transform: scaleY(0);
 }
 
-.scholarship-badge {
-  z-index: 2;
-}
-
-.js .about-media.reveal .est-badge,
-.js .scholarship-media.reveal .scholarship-badge {
+.js .about-media.reveal .est-badge {
   opacity: 0;
   transform: translate3d(0, 10px, 0);
   transition: opacity 0.55s var(--ease-out), transform 0.65s var(--ease-out);
   transition-delay: 0.42s;
 }
 
-.js .about-media.reveal.is-visible .est-badge,
-.js .scholarship-media.reveal.is-visible .scholarship-badge {
+.js .about-media.reveal.is-visible .est-badge {
   opacity: 1;
   transform: none;
 }
@@ -1322,100 +1305,6 @@ p {
 
 .exam-official {
   margin-top: 18px;
-}
-
-/* --------------------------------------------------------------------------
-   Scholarships
-   -------------------------------------------------------------------------- */
-
-.scholarship-grid {
-  display: grid;
-  grid-template-columns: minmax(0, 0.88fr) minmax(0, 1.12fr);
-  align-items: center;
-  gap: clamp(40px, 7vw, 92px);
-}
-
-.scholarship-media {
-  position: relative;
-}
-
-.scholarship-media img {
-  width: 100%;
-  aspect-ratio: 4 / 4.55;
-  border-radius: var(--radius-lg);
-  object-fit: cover;
-  object-position: center 30%;
-  box-shadow: var(--shadow-md);
-}
-
-.scholarship-badge {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 11px 15px;
-  border-radius: 9px;
-  background: rgba(255, 255, 255, 0.95);
-  color: var(--navy-800);
-  font-size: 9.5px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-}
-
-.scholarship-badge::before {
-  content: "";
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background: var(--gold-500);
-}
-
-.scholarship-copy h2 {
-  max-width: 16ch;
-  font-size: clamp(2rem, 3.4vw, 2.85rem);
-}
-
-.scholarship-copy > p {
-  max-width: 56ch;
-  margin-top: 20px;
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.75;
-}
-
-.tick-list {
-  display: grid;
-  gap: 10px;
-  margin-top: 24px;
-}
-
-.tick-list li {
-  position: relative;
-  padding-left: 24px;
-  color: var(--text-soft);
-  font-size: 0.89rem;
-}
-
-.tick-list li::before {
-  content: "→";
-  position: absolute;
-  left: 0;
-  color: var(--gold-700);
-  font-weight: 600;
-}
-
-.notice {
-  margin: 26px 0 30px;
-  border-left: 2px solid var(--gold-500);
-  border-radius: 0 8px 8px 0;
-  background: rgba(255, 255, 255, 0.45);
-  padding: 14px 18px;
-  color: var(--muted);
-  font-size: 0.82rem;
-  line-height: 1.65;
 }
 
 /* --------------------------------------------------------------------------
@@ -2886,6 +2775,10 @@ p {
     font-size: 1.18rem;
   }
 
+  .mobile-link[aria-current] {
+    color: var(--teal-600);
+  }
+
   .mobile-link .num {
     color: var(--muted);
     font-family: var(--font-sans);
@@ -2929,7 +2822,6 @@ p {
   }
 
   .about-grid,
-  .scholarship-grid,
   .news-grid,
   .careers-wrap,
   .contact-cta-inner {
@@ -2938,14 +2830,6 @@ p {
 
   .about-media {
     max-width: 620px;
-  }
-
-  .scholarship-media {
-    max-width: 540px;
-  }
-
-  .scholarship-media img {
-    aspect-ratio: 4 / 3.6;
   }
 
   .news-side {
@@ -3191,14 +3075,6 @@ p {
   .courses-note {
     flex-direction: column;
     gap: 10px;
-  }
-
-  .scholarship-media {
-    max-width: 100%;
-  }
-
-  .scholarship-media img {
-    aspect-ratio: 4 / 3.8;
   }
 
   .branch-tabs {
@@ -3675,7 +3551,6 @@ p {
 /* Images */
 
 .about-media img,
-.scholarship-media img,
 .careers-media img,
 .news-media img {
   transition: transform 0.9s var(--ease-out), opacity 0.55s var(--ease-out),
@@ -3684,7 +3559,6 @@ p {
 
 @media (hover: hover) and (pointer: fine) {
   .about-media figure:hover img,
-  .scholarship-media:hover img,
   .careers-wrap:hover .careers-media img,
   .news-feature:hover .news-media img {
     transform: scale(1.028);
@@ -3840,14 +3714,12 @@ main img.is-loaded {
   }
 
   .js .about-media.reveal figure::after,
-  .js .scholarship-media.reveal::after,
   .js .news-feature.reveal .news-media::after,
   .js .careers-wrap.reveal .careers-media::after {
     display: none !important;
   }
 
-  .js .about-media.reveal .est-badge,
-  .js .scholarship-media.reveal .scholarship-badge {
+  .js .about-media.reveal .est-badge {
     opacity: 1;
     transform: none;
   }
@@ -3873,7 +3745,6 @@ main img.is-loaded {
   .branch-tab:hover,
   .social-link:hover,
   .about-media figure:hover img,
-  .scholarship-media:hover img,
   .careers-wrap:hover .careers-media img,
   .news-feature:hover .news-media img {
     transform: none !important;

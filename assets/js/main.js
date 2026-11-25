@@ -59,9 +59,13 @@
     scrollQueued = true;
 
     window.requestAnimationFrame(function () {
-      updateHeader();
-      updateHeroParallax();
-      scrollQueued = false;
+      try {
+        updateHeader();
+        updateHeroParallax();
+        updateActiveSection();
+      } finally {
+        scrollQueued = false;
+      }
     });
   }
 
@@ -71,6 +75,7 @@
     function () {
       updateHeader();
       updateHeroParallax();
+      updateActiveSection();
     },
     { passive: true }
   );
@@ -85,6 +90,7 @@
   window.addEventListener("pageshow", function () {
     updateHeader();
     updateHeroParallax();
+    updateActiveSection();
   });
 
   updateHeader();
@@ -93,6 +99,160 @@
   document.querySelectorAll("[data-year]").forEach(function (el) {
     el.textContent = String(new Date().getFullYear());
   });
+
+  /* ------------------------------------------------------------------------
+     Section navigation state (scrollspy)
+     ------------------------------------------------------------------------ */
+
+  var navCurrentLinks = Array.prototype.slice.call(
+    document.querySelectorAll(".primary-nav a, .mobile-nav nav a")
+  );
+
+  var spyLinks = navCurrentLinks.filter(function (link) {
+    return (link.getAttribute("href") || "").charAt(0) === "#";
+  });
+
+  var spySections = spyLinks
+    .map(function (link) {
+      return document.getElementById(link.getAttribute("href").slice(1));
+    })
+    .filter(Boolean);
+
+  var pageSlug = function (href) {
+    return (href || "")
+      .split("#")[0]
+      .split("?")[0]
+      .replace(/^.*\//, "")
+      .replace(/\.html?$/i, "")
+      .toLowerCase();
+  };
+
+  var currentPageSlug = pageSlug(window.location.pathname.split("/").pop() || "index.html");
+
+  if (currentPageSlug) {
+    navCurrentLinks.forEach(function (link) {
+      if (pageSlug(link.getAttribute("href")) === currentPageSlug) {
+        link.setAttribute("aria-current", "page");
+      }
+    });
+  }
+
+  var currentSectionId = null;
+  var spyTargetId = "";
+  var spyTargetUntil = 0;
+
+  function setActiveNav(id) {
+    if (id === currentSectionId) return;
+    currentSectionId = id;
+
+    navCurrentLinks.forEach(function (link) {
+      var href = link.getAttribute("href") || "";
+
+      if (id && href === "#" + id) {
+        link.setAttribute("aria-current", "location");
+      } else if (!id && href === "index.html") {
+        link.setAttribute("aria-current", "page");
+      } else {
+        link.removeAttribute("aria-current");
+      }
+    });
+  }
+
+  function computeActiveSection() {
+    if (!spySections.length) return "";
+
+    var probe = window.scrollY + (siteHeaderOffset()) + 24;
+    var active = "";
+
+    spySections.forEach(function (section) {
+      if (section.getBoundingClientRect().top + window.scrollY <= probe) {
+        active = section.id;
+      }
+    });
+
+    if (window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 2) {
+      active = spySections[spySections.length - 1].id;
+    }
+
+    return active;
+  }
+
+  function siteHeaderOffset() {
+    return header ? header.offsetHeight : 0;
+  }
+
+  function updateActiveSection() {
+    if (!spySections.length) return;
+
+    var id = computeActiveSection();
+
+    if (spyTargetId) {
+      // A clicked link keeps its section highlighted while the smooth scroll
+      // travels there; release it once the section is reached, on user input,
+      // or after a short safety window.
+      if (id === spyTargetId || Date.now() > spyTargetUntil) {
+        spyTargetId = "";
+      } else {
+        return;
+      }
+    }
+
+    setActiveNav(id);
+  }
+
+  if (spySections.length) {
+    updateActiveSection();
+
+    spyLinks.forEach(function (link) {
+      link.addEventListener("click", function () {
+        spyTargetId = link.getAttribute("href").slice(1);
+        spyTargetUntil = Date.now() + 2500;
+        setActiveNav(spyTargetId);
+      });
+    });
+
+    ["wheel", "touchstart", "keydown"].forEach(function (eventName) {
+      window.addEventListener(
+        eventName,
+        function () {
+          spyTargetId = "";
+        },
+        { passive: true }
+      );
+    });
+
+    // Deep links land before images and fonts settle, so the target can sit a
+    // few pixels off. Re-align once, then read the real scroll position.
+    var alignToHash = function () {
+      if (spyTargetId || !window.location.hash) return;
+
+      var id = window.location.hash.slice(1);
+      var section = document.getElementById(id);
+      if (!section || spySections.indexOf(section) === -1) return;
+
+      // Land slightly above the probe line (header + 24) so the section is
+      // already counted as current once the browser stops moving.
+      var top = Math.max(
+        section.getBoundingClientRect().top + window.scrollY - siteHeaderOffset() - 16,
+        0
+      );
+
+      if (Math.abs(window.scrollY - top) > 2) {
+        window.scrollTo({ top: top, behavior: "instant" });
+      }
+    };
+
+    var syncAfterNavigation = function () {
+      alignToHash();
+      updateActiveSection();
+    };
+
+    window.addEventListener("hashchange", updateActiveSection);
+    window.addEventListener("load", syncAfterNavigation);
+    window.addEventListener("pageshow", function (event) {
+      if (!event.persisted) syncAfterNavigation();
+    });
+  }
 
   /* ------------------------------------------------------------------------
      Mobile navigation
@@ -374,14 +534,12 @@
   var actionsByType = {
     general: "contact",
     course: "inquiry",
-    scholarship: "inquiry",
     examination: "inquiry",
     employment: "application"
   };
 
   var buttonLabelFor = function (type) {
     if (type === "employment") return "Send application";
-    if (type === "scholarship") return "Send scholarship inquiry";
     if (type === "examination") return "Send examination inquiry";
     return "Send inquiry";
   };
@@ -404,8 +562,6 @@
 
     if (type === "course") {
       forField.value = (courseSelect && courseSelect.value) || "Course Inquiry";
-    } else if (type === "scholarship") {
-      forField.value = "Scholarship";
     } else if (type === "examination") {
       forField.value = "Exam";
     } else if (type === "employment") {
@@ -437,8 +593,6 @@
     if (messageInput) {
       if (type === "employment") {
         messageInput.placeholder = "Tell us about your teaching experience and the role you are interested in.";
-      } else if (type === "scholarship") {
-        messageInput.placeholder = "Tell us about your background and why you would like to be considered for a scholarship.";
       } else if (type === "examination") {
         messageInput.placeholder = "Tell us which examination you are preparing for and your current German level.";
       } else if (type === "course") {
@@ -561,8 +715,6 @@
     general: "general",
     course: "course",
     courses: "course",
-    scholarship: "scholarship",
-    scholarships: "scholarship",
     examination: "examination",
     examinations: "examination",
     exam: "examination",
